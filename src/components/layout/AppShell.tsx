@@ -10,6 +10,7 @@ import { killSession } from "../../lib/ipc";
 import { SIDEBAR_WIDTH } from "../../lib/constants";
 import TabBar from "./TabBar";
 import TitleBar from "./TitleBar";
+import ResizeHandles from "./ResizeHandles";
 import WorkspaceView from "../workspace/WorkspaceView";
 import WorkspaceSetup from "../setup/WorkspaceSetup";
 import CommandPalette from "./CommandPalette";
@@ -387,6 +388,7 @@ export default function AppShell({ uiVariant = "default" }: AppShellProps) {
       }}
     >
       <SocketListener />
+      <ResizeHandles />
       <TitleBar uiVariant={uiVariant} onNewWorkspace={handleNewWorkspace} />
       <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden", minHeight: 0 }}>
         {/* Sidebar — kept mounted so terminals don't remount; width animates to 0 */}
