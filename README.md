@@ -29,6 +29,17 @@ ptrcode is built to bring a fast, keyboard-first terminal workspace experience t
 - **Persistent State**: Workspaces and layouts are saved across sessions
 - **Cross-platform**: Linux, macOS, and Windows
 
+## Supported coding agents
+
+When you create a new pane, you can pick which coding agent runs in it. Each one just needs its own CLI installed and on your `PATH` — ptrcode launches it like any other command:
+
+- **Shell** — your regular system shell, no agent
+- **Claude Code** (`claude`) — Anthropic's coding agent
+- **Codex CLI** (`codex`) — OpenAI's coding agent
+- **Gemini CLI** (`gemini`) — Google's coding agent
+- **Aider** (`aider`) — AI pair programming
+- **Pi** (`pi`) — [Pi coding agent](https://github.com/earendil-works/pi), install with `npm install -g @earendil-works/pi-coding-agent`
+
 ## Installation
 
 ### Quick Install (Recommended)
