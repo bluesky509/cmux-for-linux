@@ -178,16 +178,29 @@ export const useWorkspaceLayoutStore = create<WorkspaceLayoutState>(() => ({
     const workspace = useWorkspaceListStore.getState().getWorkspace(workspaceId);
     if (!workspace) return;
 
+    let paneRemoved = false;
     const newPanes = workspace.panes.flatMap((p) => {
       if (p.id !== paneId) return [p];
       const remaining = p.tabs.filter((t) => t.id !== tabId);
-      if (remaining.length === 0) return []; // remove pane if no tabs left
+      if (remaining.length === 0) {
+        paneRemoved = true;
+        return []; // remove pane if no tabs left
+      }
       const newActiveId = p.activeTabId === tabId ? remaining[remaining.length - 1].id : p.activeTabId;
       const activeTab = remaining.find((t) => t.id === newActiveId) ?? remaining[0];
       return [{ ...p, tabs: remaining, activeTabId: newActiveId, sessionId: activeTab.sessionId }];
     });
 
-    useWorkspaceListStore.getState()._updateWorkspacePanes(workspaceId, newPanes);
+    // Closing a pane's last tab removes the pane itself — drop its ID from
+    // splitRows too, or it's left as a permanent empty gap in the grid.
+    let newSplitRows = workspace.splitRows;
+    if (paneRemoved && newSplitRows) {
+      newSplitRows = newSplitRows
+        .map((row) => row.filter((id) => id !== paneId))
+        .filter((row) => row.length > 0);
+    }
+
+    useWorkspaceListStore.getState()._updateWorkspacePanes(workspaceId, newPanes, newSplitRows);
   },
 
   setActivePaneTab: (workspaceId, paneId, tabId) => {
