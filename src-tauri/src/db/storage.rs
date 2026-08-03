@@ -76,5 +76,10 @@ pub fn save(app_handle: &tauri::AppHandle, data: &PersistentData) -> Result<(), 
     let path = data_path(app_handle)?;
     let json =
         serde_json::to_string_pretty(data).map_err(|e| format!("Failed to serialize data: {e}"))?;
-    fs::write(&path, json).map_err(|e| format!("Failed to write data file: {e}"))
+
+    // Write to a temp file and rename into place so a crash or power loss
+    // mid-write can never leave a truncated/corrupt data.json behind.
+    let tmp_path = path.with_extension("json.tmp");
+    fs::write(&tmp_path, json).map_err(|e| format!("Failed to write data file: {e}"))?;
+    fs::rename(&tmp_path, &path).map_err(|e| format!("Failed to save data file: {e}"))
 }
