@@ -46,6 +46,15 @@ export const BUILT_IN_AGENTS: AgentDefinition[] = [
     icon: "A",
     color: "#94e2d5",
   },
+  {
+    id: "pi",
+    name: "Pi",
+    description: "Pi coding agent",
+    command: "pi",
+    args: [],
+    icon: "P",
+    color: "#cba6f7",
+  },
 ];
 
 export function getAgent(id: string): AgentDefinition | undefined {
