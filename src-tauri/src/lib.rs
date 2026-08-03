@@ -24,6 +24,18 @@ pub fn run() {
     };
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            // A second launch attempt arrived — focus the existing window
+            // instead of letting a new OS process spin up its own AppState.
+            // Without this, a second launch races the first process to
+            // read/write data.json, silently clobbering saved workspaces.
+            use tauri::Manager;
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize();
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
         .plugin(tauri_plugin_shell::init())
         .manage(state)
         .manage(socket::SocketState {

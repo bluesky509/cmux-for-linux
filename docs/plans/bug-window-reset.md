@@ -22,8 +22,23 @@ Opening a new Tauri window resets all existing terminals to `~`, losing their se
 - `src/lib/ipc.ts` — claimLeader() and getWindowCount() wrappers
 - `src/hooks/useWorkspacePersist.ts` — Leader-aware bootstrap and save logic
 
+## Follow-up: leader election alone doesn't cover the real trigger
+`bootstrapped: AtomicBool` lives in per-process `AppState`. Nothing in this
+app ever creates a second `WebviewWindow` inside one process — the app has
+exactly one window (`tauri.conf.json`) and no window-creation code. So the
+realistic way users hit this bug is launching the app a second time (icon
+double-click, running the binary again), which starts an entirely separate
+OS process with its own independent `AppState` and its own `bootstrapped =
+false`. That second process also wins "leadership" and both processes race
+to read/write `data.json` — reproducing the original bug regardless of the
+election logic.
+
+Fixed by adding `tauri-plugin-single-instance`, registered first in the
+builder chain, so a second launch attempt focuses the existing window
+instead of starting a second process. This makes the leader-election code
+meaningful (it now only ever runs within one process).
+
 ## Acceptance Criteria
 - [x] Open ptrterminal, create workspaces, cd to various dirs
-- [ ] Open second window — existing terminals keep their sessions and CWDs
-- [ ] Close second window — first window unaffected
-- [ ] Close leader window, reopen — persisted state restores correctly
+- [x] Launch the app a second time — existing window is focused, no second process/window is created
+- [x] Persisted state (workspaces, CWDs) survives relaunch after quitting fully
