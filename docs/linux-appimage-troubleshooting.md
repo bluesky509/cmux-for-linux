@@ -50,3 +50,13 @@ nix run nixpkgs#appimage-run -- ./CMux_0.1.3_amd64.AppImage
 ```
 
 If the AppImage still shows a blank window after using `appimage-run`, prefer building from source so the app uses WebKitGTK from Nixpkgs.
+
+## Harmless GStreamer warning on startup
+
+You may see a line like this in the terminal when launching:
+
+```text
+** (gst-plugin-scanner:12345): CRITICAL **: ... _dma_fmt_to_dma_drm_fmts: assertion 'fmt != GST_VIDEO_FORMAT_UNKNOWN' failed
+```
+
+This comes from `gst-plugin-scanner`, part of the system's GStreamer install that WebKitGTK spawns to probe video/audio codec plugins (for HTML5 `<video>`/`<audio>` support). It's unrelated to ptrcode's own code and does not affect functionality — safe to ignore.
