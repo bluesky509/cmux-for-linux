@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useWorkspaceListStore, useUiStore, usePaneMetadataStore } from "../../stores/workspaceStore";
 import NotificationPanel from "./NotificationPanel";
@@ -32,18 +32,44 @@ const PlusIcon = () => (
   </svg>
 );
 
+const MaximizeIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="4" y="4" width="16" height="16" rx="1"></rect>
+  </svg>
+);
+
+const RestoreIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="8" y="8" width="13" height="13" rx="1"></rect>
+    <path d="M4 15V5a2 2 0 0 1 2-2h10"></path>
+  </svg>
+);
+
 export default function TitleBar({ uiVariant = "default", onNewWorkspace }: TitleBarProps) {
   const activeWorkspace = useWorkspaceListStore((s) => s.getActiveWorkspace());
   const toggleSidebar = useUiStore((s) => s.toggleSidebar);
   const paneMetadata = usePaneMetadataStore((s) => s.metadata);
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
 
   const totalNotifications = Object.values(paneMetadata).reduce(
     (sum, m) => sum + (m.notificationCount ?? 0),
     0,
   );
 
+  useEffect(() => {
+    const win = getCurrentWindow();
+    win.isMaximized().then(setIsMaximized).catch(console.error);
+    const unlisten = win.onResized(() => {
+      win.isMaximized().then(setIsMaximized).catch(console.error);
+    });
+    return () => {
+      unlisten.then((f) => f()).catch(console.error);
+    };
+  }, []);
+
   const handleMinimize = () => getCurrentWindow().minimize().catch(console.error);
+  const handleToggleMaximize = () => getCurrentWindow().toggleMaximize().catch(console.error);
   const handleClose = () => getCurrentWindow().close().catch(console.error);
 
   const groupMinWidth = 100;
@@ -193,7 +219,7 @@ export default function TitleBar({ uiVariant = "default", onNewWorkspace }: Titl
         )}
       </div>
 
-      {/* Right group: Minimize, Close */}
+      {/* Right group: Minimize, Maximize, Close */}
       <div style={{ display: "flex", alignItems: "center", gap: 2, paddingRight: 8, minWidth: groupMinWidth, justifyContent: "flex-end" }}>
         <button
           onClick={handleMinimize}
@@ -215,6 +241,25 @@ export default function TitleBar({ uiVariant = "default", onNewWorkspace }: Titl
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
+        </button>
+        <button
+          onClick={handleToggleMaximize}
+          title={isMaximized ? "Restore" : "Maximize"}
+          className={uiVariant === "cmux" ? "cmux-title-btn" : undefined}
+          style={{
+            background: "none",
+            border: "none",
+            color: "var(--cmux-text-tertiary)",
+            cursor: "pointer",
+            padding: "3px 6px",
+            borderRadius: 3,
+            display: "flex",
+            alignItems: "center",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+        >
+          {isMaximized ? <RestoreIcon /> : <MaximizeIcon />}
         </button>
         <button
           onClick={handleClose}
